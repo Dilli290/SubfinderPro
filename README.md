@@ -15,5 +15,4 @@ cd SubfinderPro
 pip install -r requirements.txt
 source venv/bin/activate
 ## Example
-```usage
 python3 subfinderpro.py -d example.com -o output.txt
