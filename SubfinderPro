@@ -1,0 +1,121 @@
+import asyncio
+import aiohttp
+import dns.resolver
+import argparse
+from rich.console import Console
+
+console = Console()
+resolver = dns.resolver.Resolver()
+resolver.timeout = 2
+resolver.lifetime = 2
+
+# -------------------------
+# Passive Sources
+# -------------------------
+
+async def crtsh(domain):
+    url = f"https://crt.sh/?q=%25.{domain}&output=json"
+    subs = set()
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=10) as r:
+                data = await r.json()
+                for entry in data:
+                    for s in entry['name_value'].split("\n"):
+                        subs.add(s.strip())
+    except:
+        pass
+    return subs
+
+
+async def hackertarget(domain):
+    url = f"https://api.hackertarget.com/hostsearch/?q={domain}"
+    subs = set()
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as r:
+                text = await r.text()
+                for line in text.splitlines():
+                    subs.add(line.split(",")[0])
+    except:
+        pass
+    return subs
+
+
+# -------------------------
+# DNS Resolver
+# -------------------------
+
+async def resolve(sub):
+    try:
+        resolver.resolve(sub, "A")
+        return sub
+    except:
+        return None
+
+
+# -------------------------
+# Bruteforce
+# -------------------------
+
+async def brute_force(domain, wordlist):
+    subs = set()
+    tasks = []
+    for word in wordlist:
+        subs.add(f"{word}.{domain}")
+    return subs
+
+
+# -------------------------
+# Main Logic
+# -------------------------
+
+async def main(domain, wordlist, output):
+    console.print(f"[cyan]🔍 Enumerating subdomains for:[/] {domain}")
+
+    results = set()
+
+    passive = await asyncio.gather(
+        crtsh(domain),
+        hackertarget(domain)
+    )
+
+    for r in passive:
+        results.update(r)
+
+    if wordlist:
+        with open(wordlist) as f:
+            words = f.read().splitlines()
+        brute = await brute_force(domain, words)
+        results.update(brute)
+
+    console.print(f"[yellow]Found {len(results)} subdomains. Resolving...[/]")
+
+    tasks = [resolve(sub) for sub in results]
+    resolved = await asyncio.gather(*tasks)
+
+    alive = sorted(set(filter(None, resolved)))
+
+    console.print(f"[green]✔ Live subdomains: {len(alive)}[/]")
+
+    for sub in alive:
+        console.print(sub)
+
+    if output:
+        with open(output, "w") as f:
+            f.write("\n".join(alive))
+        console.print(f"[blue]Saved to {output}[/]")
+
+
+# -------------------------
+# CLI
+# -------------------------
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="SubfinderX - Advanced Subdomain Finder")
+    parser.add_argument("-d", "--domain", required=True, help="Target domain")
+    parser.add_argument("-w", "--wordlist", help="Bruteforce wordlist")
+    parser.add_argument("-o", "--output", help="Output file")
+
+    args = parser.parse_args()
+    asyncio.run(main(args.domain, args.wordlist, args.output))
