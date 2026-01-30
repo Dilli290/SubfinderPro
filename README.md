@@ -14,3 +14,6 @@ git clone https://github.com/Dilli290/SubfinderPro.git
 cd SubfinderPro
 pip install -r requirements.txt
 source venv/bin/activate
+## Example
+```bash
+python3 subfinderpro.py -d example.com -o output.txt
