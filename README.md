@@ -13,3 +13,4 @@ An advanced Python-based subdomain enumeration tool for reconnaissance and bug b
 git clone https://github.com/Dilli290/SubfinderPro.git
 cd SubfinderPro
 pip install -r requirements.txt
+source venv/bin/activate
