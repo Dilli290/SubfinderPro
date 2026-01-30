@@ -16,3 +16,17 @@ pip install -r requirements.txt
 source venv/bin/activate
 ## Example
 python3 subfinderpro.py -d example.com -o output.txt
+
+
+⚠️ Replace `yourusername` later.
+
+---
+
+## 📄 Step 5: Create `LICENSE` (Optional but Recommended)
+
+MIT License is good:
+
+```text
+MIT License
+
+Copyright (c) 2026 Your Name
